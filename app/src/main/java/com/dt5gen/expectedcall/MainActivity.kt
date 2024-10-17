@@ -1,9 +1,13 @@
 package com.dt5gen.expectedcall
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -21,8 +25,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Инициализируем CallReceiver с applicationContext
-        callReceiver = CallReceiver(applicationContext)
+        // Запрос разрешения на READ_PHONE_STATE
+        requestPhoneStatePermission()
 
         enableEdgeToEdge()
         setContent {
@@ -34,6 +38,28 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+
+    // Проверка и запрос разрешения
+    private fun requestPhoneStatePermission() {
+        val permissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                Log.i("MainActivity", "READ_PHONE_STATE permission granted")
+                // Инициализация CallReceiver после получения разрешения
+                callReceiver = CallReceiver(applicationContext)
+            } else {
+                Log.e("MainActivity", "READ_PHONE_STATE permission denied")
+            }
+        }
+
+        if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            permissionLauncher.launch(Manifest.permission.READ_PHONE_STATE)
+        } else {
+            // Разрешение уже предоставлено, инициализируем CallReceiver
+            callReceiver = CallReceiver(applicationContext)
         }
     }
 

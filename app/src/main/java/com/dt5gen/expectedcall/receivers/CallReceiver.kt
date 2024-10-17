@@ -1,5 +1,6 @@
 package com.dt5gen.expectedcall.receivers
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.media.AudioManager
@@ -12,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+@SuppressLint("MissingPermission")
 class CallReceiver(private val context: Context) {
 
     private val telephonyManager =

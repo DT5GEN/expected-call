@@ -30,6 +30,7 @@ class CallService : Service() {
         telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         telephonyManager.registerTelephonyCallback(mainExecutor, telephonyCallback)
+
     }
 
     private fun disableDoNotDisturb() {
