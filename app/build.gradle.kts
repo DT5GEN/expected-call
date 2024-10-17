@@ -82,11 +82,12 @@ dependencies {
     implementation(libs.gson)
 
 
-
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+    implementation("androidx.activity:activity-compose:1.7.2")
 //    implementation(libs.ui)
 //    implementation(libs.androidx.material)
 //    implementation(libs.ui.tooling.preview)
-//    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
 //    implementation(libs.androidx.activity.compose.v172)
 //    implementation(libs.androidx.core.ktx.v1101)
 //    implementation(libs.androidx.room.runtime)
