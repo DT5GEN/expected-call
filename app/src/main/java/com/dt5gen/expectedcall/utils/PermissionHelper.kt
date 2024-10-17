@@ -1,4 +1,4 @@
-package com.dt5gen.expectedcall.utiils
+package com.dt5gen.expectedcall.utils
 
 import android.Manifest
 import android.app.Activity
