@@ -1,5 +1,6 @@
 package com.dt5gen.expectedcall.ui.screens
 
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -22,19 +23,23 @@ import com.dt5gen.expectedcall.utils.PermissionHelper
 import com.dt5gen.expectedcall.viewModels.PermissionViewModel
 
 @Composable
-fun PermissionScreen(permissionViewModel: PermissionViewModel = viewModel()) {
-    // Правильное использование collectAsState для StateFlow
-    val isPermissionGranted by permissionViewModel.isPermissionGranted.collectAsState()
+fun PermissionScreen(
+    context: Context,
+    permissionViewModel: PermissionViewModel = viewModel()
+) {
+    val isAllPermissionsGranted by permissionViewModel.isAllPermissionsGranted.collectAsState()
 
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        permissionViewModel.checkPermission()
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.values.all { it }
+        if (allGranted) {
+            permissionViewModel.checkPermissions(context) // Проверяем разрешения
+        }
     }
 
     LaunchedEffect(Unit) {
-        // Проверяем разрешения при запуске экрана
-        permissionViewModel.checkPermission()
+        permissionViewModel.checkPermissions(context) // Проверяем при загрузке
     }
 
     Column(
@@ -44,15 +49,15 @@ fun PermissionScreen(permissionViewModel: PermissionViewModel = viewModel()) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (isPermissionGranted) {
-            Text("Разрешение предоставлено")
+        if (isAllPermissionsGranted) {
+            Text("Все разрешения предоставлены")
         } else {
-            Text("Разрешение не предоставлено")
+            Text("Необходимы разрешения для работы приложения")
             Spacer(modifier = Modifier.height(8.dp))
             Button(onClick = {
-                PermissionHelper.requestPermission(launcher, PermissionHelper.CONTACTS_PERMISSION)
+                PermissionHelper.requestAllPermissions(launcher)
             }) {
-                Text("Запросить разрешение")
+                Text("Запросить разрешения")
             }
         }
     }

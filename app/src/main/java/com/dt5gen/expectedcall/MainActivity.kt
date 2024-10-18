@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
                             HomeScreen(navController, contactViewModel)
                         }
                         composable("permissions") {
-                            PermissionScreen()
+                            PermissionScreen(context = this@MainActivity) // Передаем контекст
                         }
                         composable("selectContact") {
                             SelectContactScreen(
@@ -71,6 +71,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 
 @Composable
 fun HomeScreen(navController: NavHostController, contactViewModel: ContactViewModel) {
