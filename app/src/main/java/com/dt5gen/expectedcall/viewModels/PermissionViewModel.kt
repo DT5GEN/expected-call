@@ -1,31 +1,28 @@
+
 package com.dt5gen.expectedcall.viewModels
 
-
-import android.Manifest
 import android.app.Application
-import android.content.pm.PackageManager
-import androidx.compose.runtime.mutableStateOf
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.dt5gen.expectedcall.utils.PermissionHelper
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class PermissionViewModel(application: Application) : AndroidViewModel(application) {
+    private val _isPermissionGranted = MutableStateFlow(false)
+    val isPermissionGranted: StateFlow<Boolean> = _isPermissionGranted
 
-    private val context = getApplication<Application>().applicationContext
-
-    // Состояние разрешения
-    var isPermissionGranted = mutableStateOf(false)
-        private set
-
-    // Проверка состояния разрешения
     fun checkPermission() {
-        val granted = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.READ_CALL_LOG
-        ) == PackageManager.PERMISSION_GRANTED
-        isPermissionGranted.value = granted
+        viewModelScope.launch {
+            _isPermissionGranted.value = PermissionHelper.hasPermission(
+                getApplication(),
+                PermissionHelper.CONTACTS_PERMISSION
+            )
+        }
     }
 
-    // Запрос разрешения через ViewModel
-    fun requestPermission(onRequest: (String) -> Unit) {
-        onRequest(Manifest.permission.READ_CALL_LOG)
+    fun requestPermission(request: (String) -> Unit) {
+        request(PermissionHelper.CONTACTS_PERMISSION)
     }
 }

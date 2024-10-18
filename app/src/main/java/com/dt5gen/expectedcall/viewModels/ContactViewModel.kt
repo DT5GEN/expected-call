@@ -28,4 +28,12 @@ class ContactViewModel : ViewModel() {
         _selectedContact.value = contact
         LoudManager.switchToLoudMode(context)
     }
+    fun selectedContactsText(): String {
+        val contact = selectedContact.value
+        return if (contact != null) {
+            "Имя: ${contact.name}, Номер: ${contact.phoneNumber}"
+        } else {
+            "Контакт не выбран"
+        }
+    }
 }
