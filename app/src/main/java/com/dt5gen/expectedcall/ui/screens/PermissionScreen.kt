@@ -19,12 +19,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.dt5gen.expectedcall.utils.PermissionHelper
 import com.dt5gen.expectedcall.viewModels.PermissionViewModel
 
 @Composable
 fun PermissionScreen(
     context: Context,
+    navController: NavHostController,
     permissionViewModel: PermissionViewModel = viewModel()
 ) {
     val isAllPermissionsGranted by permissionViewModel.isAllPermissionsGranted.collectAsState()
@@ -34,12 +36,13 @@ fun PermissionScreen(
     ) { permissions ->
         val allGranted = permissions.values.all { it }
         if (allGranted) {
-            permissionViewModel.checkPermissions(context) // Проверяем разрешения
+            permissionViewModel.checkPermissions(context)
+            navController.navigate("selectContact") // Переход на экран контактов
         }
     }
 
     LaunchedEffect(Unit) {
-        permissionViewModel.checkPermissions(context) // Проверяем при загрузке
+        permissionViewModel.checkPermissions(context)
     }
 
     Column(

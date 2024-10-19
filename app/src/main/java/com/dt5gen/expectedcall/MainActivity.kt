@@ -29,6 +29,7 @@ import com.dt5gen.expectedcall.ui.screens.SelectContactScreen
 import com.dt5gen.expectedcall.ui.theme.ExpectedCallTheme
 import com.dt5gen.expectedcall.viewModels.ContactViewModel
 
+
 class MainActivity : ComponentActivity() {
 
     private val contactViewModel: ContactViewModel by viewModels()
@@ -39,8 +40,9 @@ class MainActivity : ComponentActivity() {
         contactViewModel.loadContacts(this)
 
         setContent {
-            ExpectedCallTheme {
                 val navController = rememberNavController()
+
+            ExpectedCallTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = { NavigationBar(navController) }
@@ -54,7 +56,10 @@ class MainActivity : ComponentActivity() {
                             HomeScreen(navController, contactViewModel)
                         }
                         composable("permissions") {
-                            PermissionScreen(context = this@MainActivity) // Передаем контекст
+                            PermissionScreen(
+                                context = this@MainActivity,
+                                navController = navController
+                            )
                         }
                         composable("selectContact") {
                             SelectContactScreen(
@@ -88,7 +93,11 @@ fun HomeScreen(navController: NavHostController, contactViewModel: ContactViewMo
 @Composable
 fun NavigationBar(navController: NavHostController) {
     val items = listOf(
-        NavigationItem(route = "permissions", label = "Разрешения", icon = Icons.Default.Settings),
+        NavigationItem(
+            route = "permissions",
+            label = "Разрешения",
+            icon = Icons.Default.Settings
+        ),
         NavigationItem(route = "home", label = "Главная", icon = Icons.Default.Home),
         NavigationItem(
             route = "selectContact",
@@ -119,9 +128,9 @@ fun NavigationBar(navController: NavHostController) {
         }
     }
 }
-
 data class NavigationItem(
     val route: String,
     val label: String,
     val icon: androidx.compose.ui.graphics.vector.ImageVector
 )
+
