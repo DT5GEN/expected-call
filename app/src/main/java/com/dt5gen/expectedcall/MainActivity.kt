@@ -1,81 +1,136 @@
 package com.dt5gen.expectedcall
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.dt5gen.expectedcall.receivers.CallReceiver
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.dt5gen.expectedcall.ui.screens.PermissionScreen
+import com.dt5gen.expectedcall.ui.screens.SelectContactScreen
 import com.dt5gen.expectedcall.ui.theme.ExpectedCallTheme
+import com.dt5gen.expectedcall.viewModels.ContactViewModel
+
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var callReceiver: CallReceiver
+    private val contactViewModel: ContactViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Запрос разрешения на READ_PHONE_STATE
-        requestPhoneStatePermission()
+        contactViewModel.loadContacts(this)
 
-        enableEdgeToEdge()
         setContent {
+                val navController = rememberNavController()
+
             ExpectedCallTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Sanyok",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = { NavigationBar(navController) }
+                ) { paddingValues ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = "home",
+                        modifier = Modifier.padding(paddingValues)
+                    ) {
+                        composable("home") {
+                            HomeScreen(navController, contactViewModel)
+                        }
+                        composable("permissions") {
+                            PermissionScreen(
+                                context = this@MainActivity,
+                                navController = navController
+                            )
+                        }
+                        composable("selectContact") {
+                            SelectContactScreen(
+                                viewModel = contactViewModel,
+                                onContactSelected = { contact ->
+                                    contactViewModel.selectContact(contact, this@MainActivity)
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
     }
+}
 
-    // Проверка и запрос разрешения
-    private fun requestPhoneStatePermission() {
-        val permissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted: Boolean ->
-            if (isGranted) {
-                Log.i("MainActivity", "READ_PHONE_STATE permission granted")
-                // Инициализация CallReceiver после получения разрешения
-                callReceiver = CallReceiver(applicationContext)
-            } else {
-                Log.e("MainActivity", "READ_PHONE_STATE permission denied")
-            }
-        }
 
-        if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            permissionLauncher.launch(Manifest.permission.READ_PHONE_STATE)
-        } else {
-            // Разрешение уже предоставлено, инициализируем CallReceiver
-            callReceiver = CallReceiver(applicationContext)
-        }
-    }
-
-    @Composable
-    fun Greeting(name: String, modifier: Modifier = Modifier) {
+@Composable
+fun HomeScreen(navController: NavHostController, contactViewModel: ContactViewModel) {
+    Scaffold { paddingValues ->
         Text(
-            text = "Hello $name!",
-            modifier = modifier
+            text = "Выбранные контакты:\n${contactViewModel.selectedContactsText()}",
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
         )
     }
+}
 
-    @Preview(showBackground = true)
-    @Composable
-    fun GreetingPreview() {
-        ExpectedCallTheme {
-            Greeting("Android")
+@Composable
+fun NavigationBar(navController: NavHostController) {
+    val items = listOf(
+        NavigationItem(
+            route = "permissions",
+            label = "Разрешения",
+            icon = Icons.Default.Settings
+        ),
+        NavigationItem(route = "home", label = "Главная", icon = Icons.Default.Home),
+        NavigationItem(
+            route = "selectContact",
+            label = "Контакты",
+            icon = Icons.Default.AccountCircle
+        )
+    )
+
+    NavigationBar {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentDestination = navBackStackEntry?.destination
+
+        items.forEach { item ->
+            NavigationBarItem(
+                icon = { Icon(item.icon, contentDescription = item.label) },
+                label = { Text(item.label) },
+                selected = currentDestination?.route == item.route,
+                onClick = {
+                    navController.navigate(item.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
         }
     }
 }
+data class NavigationItem(
+    val route: String,
+    val label: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector
+)
+

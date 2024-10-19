@@ -1,31 +1,28 @@
 package com.dt5gen.expectedcall.viewModels
 
-
-import android.Manifest
-import android.app.Application
+import android.content.Context
 import android.content.pm.PackageManager
-import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.dt5gen.expectedcall.utils.PermissionHelper
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-class PermissionViewModel(application: Application) : AndroidViewModel(application) {
+class PermissionViewModel : ViewModel() {
 
-    private val context = getApplication<Application>().applicationContext
+    private val _isAllPermissionsGranted = MutableStateFlow(false)
+    val isAllPermissionsGranted: StateFlow<Boolean> = _isAllPermissionsGranted
 
-    // Состояние разрешения
-    var isPermissionGranted = mutableStateOf(false)
-        private set
-
-    // Проверка состояния разрешения
-    fun checkPermission() {
-        val granted = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.READ_CALL_LOG
-        ) == PackageManager.PERMISSION_GRANTED
-        isPermissionGranted.value = granted
-    }
-
-    // Запрос разрешения через ViewModel
-    fun requestPermission(onRequest: (String) -> Unit) {
-        onRequest(Manifest.permission.READ_CALL_LOG)
+    // Проверка предоставленных разрешений
+    fun checkPermissions(context: Context) {
+        viewModelScope.launch {
+            val allGranted = PermissionHelper.requiredPermissions.all { permission ->
+                ContextCompat.checkSelfPermission(context, permission) ==
+                        PackageManager.PERMISSION_GRANTED
+            }
+            _isAllPermissionsGranted.value = allGranted
+        }
     }
 }

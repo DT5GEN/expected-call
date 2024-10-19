@@ -1,21 +1,22 @@
 package com.dt5gen.expectedcall.utils
 
+import android.app.NotificationManager
 import android.content.Context
 import android.media.AudioManager
-import com.dt5gen.expectedcall.model.Contact
 
-fun setRingerMode(context: Context, mode: Int) {
-    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    audioManager.ringerMode = mode
+object LoudManager {
+    fun switchToLoudMode(context: Context) {
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
-    fun switchToLoudIfNeeded(
-        context: Context,
-        incomingNumber: String,
-        selectedContacts: List<Contact>
-    ) {
-        val contactNumbers = selectedContacts.map { it.phoneNumber }
-        if (incomingNumber in contactNumbers) {
-            setRingerMode(context, AudioManager.RINGER_MODE_NORMAL)
+        // Проверяем разрешение
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (notificationManager.isNotificationPolicyAccessGranted) {
+            audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
+        } else {
+            // Лог или уведомление о том, что доступ к "Не беспокоить" не предоставлен
+            throw SecurityException("Не удалось изменить режим звонка. Требуется разрешение.")
         }
     }
 }

@@ -81,7 +81,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.gson)
 
-
+    implementation(libs.androidx.navigation.compose)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
     implementation("androidx.activity:activity-compose:1.7.2")
 //    implementation(libs.ui)

@@ -1,5 +1,6 @@
 package com.dt5gen.expectedcall.ui.screens
 
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -12,25 +13,36 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.dt5gen.expectedcall.utils.PermissionHelper
 import com.dt5gen.expectedcall.viewModels.PermissionViewModel
 
 @Composable
-fun PermissionScreen(permissionViewModel: PermissionViewModel = viewModel()) {
-    val isPermissionGranted by permissionViewModel.isPermissionGranted
+fun PermissionScreen(
+    context: Context,
+    navController: NavHostController,
+    permissionViewModel: PermissionViewModel = viewModel()
+) {
+    val isAllPermissionsGranted by permissionViewModel.isAllPermissionsGranted.collectAsState()
 
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        permissionViewModel.checkPermission()
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.values.all { it }
+        if (allGranted) {
+            permissionViewModel.checkPermissions(context)
+            navController.navigate("selectContact") // Переход на экран контактов
+        }
     }
 
     LaunchedEffect(Unit) {
-        permissionViewModel.checkPermission()
+        permissionViewModel.checkPermissions(context)
     }
 
     Column(
@@ -40,15 +52,15 @@ fun PermissionScreen(permissionViewModel: PermissionViewModel = viewModel()) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (isPermissionGranted) {
-            Text("Разрешение предоставлено")
+        if (isAllPermissionsGranted) {
+            Text("Все разрешения предоставлены")
         } else {
-            Text("Разрешение не предоставлено")
+            Text("Необходимы разрешения для работы приложения")
             Spacer(modifier = Modifier.height(8.dp))
             Button(onClick = {
-                permissionViewModel.requestPermission { launcher.launch(it) }
+                PermissionHelper.requestAllPermissions(launcher)
             }) {
-                Text("Запросить разрешение")
+                Text("Запросить разрешения")
             }
         }
     }
